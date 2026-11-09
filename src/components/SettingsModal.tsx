@@ -2,14 +2,11 @@ import React, { useState, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import {
   Settings,
-  CheckCircle2,
   X,
   Save,
   RotateCcw,
 } from "lucide-react";
 import { Button } from "./ui/Button";
-import { Input } from "./ui/Input";
-import { Badge } from "./ui/Badge";
 import { Switch } from "./ui/Switch";
 import { AppSettings, DependencyStatus } from "../types";
 
@@ -80,125 +77,133 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="relative w-full max-w-2xl rounded-2xl border border-border bg-card p-6 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-4 font-sans">
+      <div className="relative w-full max-w-2xl rounded-2xl border border-white/[0.12] glass-panel p-6 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-border pb-4">
+        <div className="flex items-center justify-between border-b border-white/[0.08] pb-4">
           <div className="flex items-center space-x-2.5">
-            <Settings className="h-5 w-5 text-primary" />
-            <h2 className="text-lg font-bold">YTDisk Application Settings</h2>
+            <Settings className="w-5 h-5 text-cyan-400" />
+            <h2 className="text-base font-bold text-foreground font-mono">
+              YTDisk System & Engine Configuration
+            </h2>
           </div>
-          <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8">
-            <X className="h-4 w-4" />
-          </Button>
+          <button
+            onClick={onClose}
+            className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-white/[0.06] transition-colors"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
 
-        {/* Diagnostic Dependencies */}
-        <div className="p-3.5 rounded-xl border border-border bg-secondary/30 space-y-2">
-          <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+        {/* Diagnostics */}
+        <div className="p-3.5 rounded-xl border border-white/[0.08] bg-black/40 space-y-2">
+          <div className="text-[10px] font-mono font-bold text-muted-foreground uppercase tracking-wider">
             System Prerequisites & Diagnostics
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-            <div className="flex items-center justify-between p-2.5 bg-background rounded-lg border border-border text-xs">
+            <div className="flex items-center justify-between p-2.5 bg-black/60 rounded-lg border border-white/[0.06] text-xs font-mono">
               <div>
-                <span className="font-semibold block">FFmpeg Core Engine</span>
-                <span className="text-[11px] text-muted-foreground truncate block max-w-[180px]">
+                <span className="font-semibold block text-foreground">FFmpeg Engine</span>
+                <span className="text-[10px] text-muted-foreground truncate block max-w-[170px]">
                   {deps?.ffmpeg_path || "Not detected in PATH"}
                 </span>
               </div>
-              <Badge variant={deps?.ffmpeg_available ? "success" : "destructive"}>
-                {deps?.ffmpeg_available ? "Installed" : "Missing"}
-              </Badge>
+              <span
+                className={`text-[9px] font-bold px-2 py-0.5 rounded border ${
+                  deps?.ffmpeg_available
+                    ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
+                    : "bg-rose-500/20 text-rose-400 border-rose-500/30"
+                }`}
+              >
+                {deps?.ffmpeg_available ? "INSTALLED" : "MISSING"}
+              </span>
             </div>
 
-            <div className="flex items-center justify-between p-2.5 bg-background rounded-lg border border-border text-xs">
+            <div className="flex items-center justify-between p-2.5 bg-black/60 rounded-lg border border-white/[0.06] text-xs font-mono">
               <div>
-                <span className="font-semibold block">yt-dlp Downloader</span>
-                <span className="text-[11px] text-muted-foreground truncate block max-w-[180px]">
+                <span className="font-semibold block text-foreground">yt-dlp Downloader</span>
+                <span className="text-[10px] text-muted-foreground truncate block max-w-[170px]">
                   {deps?.ytdlp_path || "Not detected in PATH"}
                 </span>
               </div>
-              <Badge variant={deps?.ytdlp_available ? "success" : "destructive"}>
-                {deps?.ytdlp_available ? "Installed" : "Missing"}
-              </Badge>
+              <span
+                className={`text-[9px] font-bold px-2 py-0.5 rounded border ${
+                  deps?.ytdlp_available
+                    ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
+                    : "bg-rose-500/20 text-rose-400 border-rose-500/30"
+                }`}
+              >
+                {deps?.ytdlp_available ? "INSTALLED" : "MISSING"}
+              </span>
             </div>
           </div>
         </div>
 
-        {/* Directory Paths */}
-        <div className="space-y-3">
-          <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+        {/* Storage paths */}
+        <div className="space-y-3 font-mono text-xs">
+          <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
             Default Storage Directories
           </div>
 
-          <div className="space-y-2 text-xs">
+          <div className="space-y-3">
             <div>
-              <div className="flex justify-between py-1">
-                <span className="font-medium">Video Output Directory (Encoded 4K Videos)</span>
-                <button
-                  onClick={() => handlePickDir("video_output_dir")}
-                  className="text-primary hover:underline"
-                >
+              <div className="flex justify-between py-1 text-muted-foreground">
+                <span>Video Output Directory (Encoded 4K Videos)</span>
+                <button onClick={() => handlePickDir("video_output_dir")} className="text-cyan-400 hover:underline">
                   Browse...
                 </button>
               </div>
-              <Input
+              <input
                 type="text"
                 value={settings.video_output_dir}
                 onChange={(e) => setSettings({ ...settings, video_output_dir: e.target.value })}
-                className="font-mono text-xs h-8"
+                className="w-full bg-black/40 border border-white/[0.1] rounded px-3 py-1.5 text-foreground text-xs font-mono"
               />
             </div>
 
             <div>
-              <div className="flex justify-between py-1">
-                <span className="font-medium">Downloads Directory</span>
-                <button
-                  onClick={() => handlePickDir("download_dir")}
-                  className="text-primary hover:underline"
-                >
+              <div className="flex justify-between py-1 text-muted-foreground">
+                <span>Downloads Directory</span>
+                <button onClick={() => handlePickDir("download_dir")} className="text-cyan-400 hover:underline">
                   Browse...
                 </button>
               </div>
-              <Input
+              <input
                 type="text"
                 value={settings.download_dir}
                 onChange={(e) => setSettings({ ...settings, download_dir: e.target.value })}
-                className="font-mono text-xs h-8"
+                className="w-full bg-black/40 border border-white/[0.1] rounded px-3 py-1.5 text-foreground text-xs font-mono"
               />
             </div>
 
             <div>
-              <div className="flex justify-between py-1">
-                <span className="font-medium">Restored Files Directory (Decoded Files)</span>
-                <button
-                  onClick={() => handlePickDir("restore_dir")}
-                  className="text-primary hover:underline"
-                >
+              <div className="flex justify-between py-1 text-muted-foreground">
+                <span>Restored Files Directory (Decoded Payloads)</span>
+                <button onClick={() => handlePickDir("restore_dir")} className="text-cyan-400 hover:underline">
                   Browse...
                 </button>
               </div>
-              <Input
+              <input
                 type="text"
                 value={settings.restore_dir}
                 onChange={(e) => setSettings({ ...settings, restore_dir: e.target.value })}
-                className="font-mono text-xs h-8"
+                className="w-full bg-black/40 border border-white/[0.1] rounded px-3 py-1.5 text-foreground text-xs font-mono"
               />
             </div>
           </div>
         </div>
 
-        {/* Defaults & Flags */}
-        <div className="space-y-3 pt-1 border-t border-border">
-          <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-            Defaults & Automation
+        {/* Defaults & Automation */}
+        <div className="space-y-3 pt-1 border-t border-white/[0.08] font-mono text-xs">
+          <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+            Automation & Pipeline Defaults
           </div>
 
-          <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-secondary/20">
+          <div className="flex items-center justify-between p-3 rounded-lg border border-white/[0.08] bg-black/40">
             <div>
-              <span className="text-xs font-semibold block">Automatic Post-Download Decoding</span>
-              <span className="text-[11px] text-muted-foreground block">
-                Automatically unpack YTDisk containers when download finishes.
+              <span className="font-semibold block text-foreground">Automatic Post-Download Decoding</span>
+              <span className="text-[10px] text-muted-foreground block">
+                Automatically verify and decode containers immediately after YouTube or Google Drive download finishes.
               </span>
             </div>
             <Switch
@@ -206,71 +211,26 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               onCheckedChange={(checked) => setSettings({ ...settings, auto_decode: checked })}
             />
           </div>
-
-          <div className="grid grid-cols-3 gap-3 text-xs">
-            <div>
-              <span className="text-muted-foreground block mb-1">Default Block Size</span>
-              <select
-                value={settings.default_block}
-                onChange={(e) => setSettings({ ...settings, default_block: Number(e.target.value) })}
-                className="w-full h-8 rounded-md border border-input bg-background px-2 text-xs"
-              >
-                <option value={4}>4x4 px (Standard 4K)</option>
-                <option value={8}>8x8 px (Resilient)</option>
-                <option value={16}>16x16 px (Ultra)</option>
-              </select>
-            </div>
-
-            <div>
-              <span className="text-muted-foreground block mb-1">Default ECC Parity (NSYM)</span>
-              <select
-                value={settings.default_nsym}
-                onChange={(e) => setSettings({ ...settings, default_nsym: Number(e.target.value) })}
-                className="w-full h-8 rounded-md border border-input bg-background px-2 text-xs"
-              >
-                <option value={16}>16 symbols</option>
-                <option value={32}>32 symbols (Standard)</option>
-                <option value={64}>64 symbols (High ECC)</option>
-              </select>
-            </div>
-
-            <div>
-              <span className="text-muted-foreground block mb-1">Default CRF (x264 Quality)</span>
-              <Input
-                type="number"
-                min={0}
-                max={51}
-                value={settings.default_crf}
-                onChange={(e) => setSettings({ ...settings, default_crf: Number(e.target.value) })}
-                className="h-8 text-xs font-mono"
-              />
-            </div>
-          </div>
         </div>
 
-        {/* Footer Buttons */}
-        <div className="flex items-center justify-between border-t border-border pt-4">
-          <Button variant="ghost" size="sm" onClick={handleReset} className="text-xs text-muted-foreground">
-            <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
-            <span>Reset to Defaults</span>
+        {/* Footer actions */}
+        <div className="flex items-center justify-between pt-4 border-t border-white/[0.08] font-mono">
+          <Button variant="ghost" size="sm" onClick={handleReset} className="text-xs text-muted-foreground hover:text-foreground">
+            <RotateCcw className="w-3.5 h-3.5 mr-1" />
+            <span>Reset Defaults</span>
           </Button>
 
-          <div className="flex space-x-2">
+          <div className="flex items-center space-x-2">
             <Button variant="outline" size="sm" onClick={onClose} className="text-xs">
               Cancel
             </Button>
-            <Button size="sm" onClick={handleSave} className="text-xs">
-              {savedSuccess ? (
-                <>
-                  <CheckCircle2 className="h-3.5 w-3.5 mr-1.5 text-emerald-300" />
-                  <span>Saved!</span>
-                </>
-              ) : (
-                <>
-                  <Save className="h-3.5 w-3.5 mr-1.5" />
-                  <span>Save Settings</span>
-                </>
-              )}
+            <Button
+              size="sm"
+              onClick={handleSave}
+              className="bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs shadow-md"
+            >
+              <Save className="w-3.5 h-3.5 mr-1" />
+              <span>{savedSuccess ? "Saved!" : "Save Settings"}</span>
             </Button>
           </div>
         </div>

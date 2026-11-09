@@ -11,11 +11,9 @@ import {
   Check,
   ChevronDown,
   ChevronUp,
+  Clock,
 } from "lucide-react";
 import { Button } from "./ui/Button";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "./ui/Card";
-import { Input } from "./ui/Input";
-import { Badge } from "./ui/Badge";
 import { formatBytes } from "../lib/utils";
 import { HistoryItem } from "../types";
 
@@ -69,203 +67,183 @@ export const HistoryView: React.FC = () => {
   });
 
   return (
-    <div className="space-y-4 max-w-5xl mx-auto p-2">
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <History className="h-5 w-5 text-primary" />
-              <CardTitle className="text-base font-semibold">Operations History</CardTitle>
-            </div>
-            {history.length > 0 && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleClearHistory}
-                className="text-xs text-destructive hover:bg-destructive/10 border-destructive/20"
+    <div className="space-y-6 max-w-5xl mx-auto font-sans">
+      <div className="flex flex-wrap items-center justify-between gap-4 pb-3 border-b border-white/[0.08]">
+        <div className="flex items-center gap-3">
+          <span className="font-mono text-xs text-cyan-400 uppercase tracking-wider flex items-center gap-1.5 font-semibold">
+            <Clock className="w-3.5 h-3.5" />
+            AUDIT JOURNAL & LEDGER
+          </span>
+          <span className="text-white/20">/</span>
+          <h1 className="text-lg font-semibold text-foreground tracking-tight">
+            Historical Operations Log
+          </h1>
+        </div>
+        {history.length > 0 && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleClearHistory}
+            className="text-xs text-rose-400 hover:bg-rose-500/10 border-rose-500/30 font-mono h-8"
+          >
+            <Trash2 className="w-3.5 h-3.5 mr-1" />
+            <span>Clear History</span>
+          </Button>
+        )}
+      </div>
+
+      <div className="glass-panel rounded-xl p-5 shadow-xl space-y-4 border border-white/[0.08]">
+        {/* Filters & Search */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="flex items-center gap-1.5 w-full sm:w-auto font-mono text-xs">
+            {["all", "encode", "download", "decode"].map((op) => (
+              <button
+                key={op}
+                onClick={() => setFilterOp(op)}
+                className={`px-3 py-1.5 rounded-md capitalize transition-all border ${
+                  filterOp === op
+                    ? "bg-cyan-500/20 text-cyan-400 border-cyan-500/40 font-semibold"
+                    : "bg-black/30 text-muted-foreground border-white/[0.08] hover:text-foreground"
+                }`}
               >
-                <Trash2 className="h-3.5 w-3.5 mr-1" />
-                <span>Clear History</span>
-              </Button>
-            )}
+                {op}
+              </button>
+            ))}
           </div>
-          <CardDescription className="text-xs">
-            Review past encoding, decoding, and downloading sessions. Passwords are never stored.
-          </CardDescription>
-        </CardHeader>
 
-        <CardContent className="space-y-4">
-          {/* Filters & Search */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-            <div className="flex items-center space-x-1.5 w-full sm:w-auto">
-              {["all", "encode", "download", "decode"].map((op) => (
-                <button
-                  key={op}
-                  onClick={() => setFilterOp(op)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium capitalize transition-all ${
-                    filterOp === op
-                      ? "bg-primary text-primary-foreground shadow-sm"
-                      : "bg-secondary text-muted-foreground hover:text-foreground"
-                  }`}
+          <div className="relative w-full sm:w-72">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="Filter by filename, hash, or path..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-black/40 border border-white/[0.1] focus:border-cyan-400 rounded-lg pl-8 pr-3 py-1.5 text-foreground font-mono text-xs focus:outline-none"
+            />
+          </div>
+        </div>
+
+        {/* History List */}
+        {filteredHistory.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-14 text-center text-muted-foreground">
+            <History className="w-8 h-8 text-muted-foreground/40 mb-2" />
+            <p className="text-sm font-semibold text-foreground">No matching operations recorded</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              {searchQuery ? "Try refining your search terms." : "Past transactions and operations will be logged here."}
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-2.5">
+            {filteredHistory.map((item) => {
+              const isExpanded = expandedId === item.id;
+              const formattedDate = new Date(item.created_at).toLocaleString();
+
+              return (
+                <div
+                  key={item.id}
+                  className="rounded-lg border border-white/[0.08] bg-black/40 overflow-hidden transition-all shadow-sm font-mono"
                 >
-                  {op}
-                </button>
-              ))}
-            </div>
-
-            <div className="relative w-full sm:w-64">
-              <Search className="h-3.5 w-3.5 absolute left-3 top-3 text-muted-foreground" />
-              <Input
-                type="text"
-                placeholder="Search history..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 text-xs h-9"
-              />
-            </div>
-          </div>
-
-          {/* History List */}
-          {filteredHistory.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground">
-              <p className="text-sm font-medium">No history items found</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Completed operations will automatically appear here.
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-2.5">
-              {filteredHistory.map((item) => {
-                const isExpanded = expandedId === item.id;
-                return (
                   <div
-                    key={item.id}
-                    className="p-3.5 rounded-xl border border-border bg-card/70 hover:bg-card/90 transition-all text-xs space-y-2"
+                    onClick={() => setExpandedId(isExpanded ? null : item.id)}
+                    className="p-3 flex items-center justify-between cursor-pointer hover:bg-white/[0.02]"
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <Badge
-                          variant={
-                            item.operation === "encode"
-                              ? "default"
-                              : item.operation === "download"
-                              ? "secondary"
-                              : "outline"
-                          }
-                          className="capitalize text-[10px] font-mono px-2 py-0.5"
-                        >
-                          {item.operation}
-                        </Badge>
+                    <div className="flex items-center space-x-3 overflow-hidden">
+                      <span
+                        className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded border shrink-0 ${
+                          item.operation === "encode"
+                            ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
+                            : item.operation === "download"
+                            ? "bg-cyan-500/20 text-cyan-400 border-cyan-500/30"
+                            : "bg-purple-500/20 text-purple-400 border-purple-500/30"
+                        }`}
+                      >
+                        {item.operation}
+                      </span>
 
-                        <span className="font-semibold text-sm truncate max-w-sm sm:max-w-md">
+                      <div className="overflow-hidden">
+                        <span className="font-semibold text-xs text-foreground truncate block">
                           {item.name}
                         </span>
-                      </div>
-
-                      <div className="flex items-center space-x-2">
-                        <Badge
-                          variant={
-                            item.status === "success"
-                              ? "success"
-                              : item.status === "failed"
-                              ? "destructive"
-                              : "warning"
-                          }
-                          className="text-[10px] capitalize"
-                        >
-                          {item.status === "success" ? (
-                            <CheckCircle2 className="h-3 w-3 mr-1" />
-                          ) : item.status === "failed" ? (
-                            <XCircle className="h-3 w-3 mr-1" />
-                          ) : (
-                            <AlertCircle className="h-3 w-3 mr-1" />
-                          )}
-                          <span>{item.status}</span>
-                        </Badge>
-
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 text-muted-foreground"
-                          onClick={() => setExpandedId(isExpanded ? null : item.id)}
-                        >
-                          {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                        </Button>
+                        <span className="text-[10px] text-muted-foreground block">
+                          {formattedDate} {item.size_bytes ? `• ${formatBytes(item.size_bytes)}` : ""}
+                        </span>
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-1">
-                      <span>Size: {formatBytes(item.size_bytes)}</span>
-                      <span>Duration: {item.duration_seconds.toFixed(1)}s</span>
-                      <span>{new Date(item.created_at).toLocaleString()}</span>
+                    <div className="flex items-center space-x-3 shrink-0">
+                      <span
+                        className={`text-[10px] font-bold px-1.5 py-0.2 rounded flex items-center gap-1 ${
+                          item.status === "success"
+                            ? "bg-emerald-500/15 text-emerald-400"
+                            : item.status === "failed"
+                            ? "bg-rose-500/15 text-rose-400"
+                            : "bg-amber-500/15 text-amber-400"
+                        }`}
+                      >
+                        {item.status === "success" ? (
+                          <CheckCircle2 className="w-3 h-3" />
+                        ) : item.status === "failed" ? (
+                          <XCircle className="w-3 h-3" />
+                        ) : (
+                          <AlertCircle className="w-3 h-3" />
+                        )}
+                        {item.status}
+                      </span>
+
+                      {isExpanded ? (
+                        <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                      ) : (
+                        <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                      )}
                     </div>
-
-                    {isExpanded && (
-                      <div className="pt-2 border-t border-border/50 space-y-2 bg-secondary/30 p-2.5 rounded-lg font-mono text-[11px]">
-                        {item.sha256 && (
-                          <div>
-                            <span className="text-muted-foreground block text-[10px]">SHA-256:</span>
-                            <div className="flex items-center justify-between bg-background p-1.5 rounded border border-border mt-0.5">
-                              <span className="break-all">{item.sha256}</span>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-5 w-5 shrink-0 ml-1"
-                                onClick={() => copyToClipboard(item.sha256!, `${item.id}-sha`)}
-                              >
-                                {copiedId === `${item.id}-sha` ? (
-                                  <Check className="h-3 w-3 text-emerald-500" />
-                                ) : (
-                                  <Copy className="h-3 w-3" />
-                                )}
-                              </Button>
-                            </div>
-                          </div>
-                        )}
-
-                        {item.output_path && (
-                          <div>
-                            <span className="text-muted-foreground block text-[10px]">Output Path:</span>
-                            <div className="flex items-center justify-between bg-background p-1.5 rounded border border-border mt-0.5">
-                              <span className="break-all">{item.output_path}</span>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-5 w-5 shrink-0 ml-1"
-                                onClick={() => copyToClipboard(item.output_path!, `${item.id}-path`)}
-                              >
-                                {copiedId === `${item.id}-path` ? (
-                                  <Check className="h-3 w-3 text-emerald-500" />
-                                ) : (
-                                  <Copy className="h-3 w-3" />
-                                )}
-                              </Button>
-                            </div>
-                          </div>
-                        )}
-
-                        {item.details && (
-                          <div>
-                            <span className="text-muted-foreground block text-[10px]">Details:</span>
-                            <div className="text-foreground mt-0.5">{item.details}</div>
-                          </div>
-                        )}
-
-                        {item.error_message && (
-                          <div className="text-destructive">
-                            <span className="text-muted-foreground block text-[10px]">Error message:</span>
-                            <div className="mt-0.5">{item.error_message}</div>
-                          </div>
-                        )}
-                      </div>
-                    )}
                   </div>
-                );
-              })}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+
+                  {isExpanded && (
+                    <div className="p-3 border-t border-white/[0.06] bg-black/60 text-xs space-y-2 text-muted-foreground">
+                      {item.output_path && (
+                        <div>
+                          <span className="text-[10px] text-muted-foreground uppercase block">Location:</span>
+                          <span className="text-foreground text-[11px] break-all">{item.output_path}</span>
+                        </div>
+                      )}
+
+                      {item.sha256 && (
+                        <div>
+                          <span className="text-[10px] text-muted-foreground uppercase block">SHA-256 Digest:</span>
+                          <div className="flex items-center justify-between gap-2 bg-black/80 px-2.5 py-1.5 rounded border border-white/[0.06] mt-0.5">
+                            <span className="text-[11px] text-cyan-400 truncate">{item.sha256}</span>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                copyToClipboard(item.sha256!, item.id);
+                              }}
+                              className="text-muted-foreground hover:text-foreground shrink-0"
+                            >
+                              {copiedId === item.id ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {item.details && (
+                        <div className="text-[11px]">
+                          Details: <strong className="text-emerald-400">{item.details}</strong>
+                        </div>
+                      )}
+
+                      {item.error_message && (
+                        <div className="text-[11px] text-rose-400 bg-rose-500/10 p-2 rounded border border-rose-500/20">
+                          Error: {item.error_message}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

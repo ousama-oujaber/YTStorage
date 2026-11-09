@@ -185,7 +185,14 @@ export const App: React.FC = () => {
   const activeTasksList = Object.values(activeTasks);
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col antialiased">
+    <div className="min-h-screen bg-background text-foreground flex flex-col antialiased relative overflow-hidden font-sans">
+      {/* Atmospheric Background Luminescence */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        <div className="absolute -top-40 -left-40 w-[600px] h-[600px] bg-emerald-500/10 rounded-full blur-[140px]" />
+        <div className="absolute top-1/3 -right-40 w-[700px] h-[700px] bg-cyan-500/10 rounded-full blur-[160px]" />
+        <div className="absolute -bottom-40 left-1/4 w-[800px] h-[500px] bg-emerald-600/5 rounded-full blur-[180px]" />
+      </div>
+
       <Header
         deps={deps}
         activeTab={activeTab}
@@ -196,7 +203,7 @@ export const App: React.FC = () => {
         openSettings={() => setIsSettingsOpen(true)}
       />
 
-      <main className="flex-1 p-6 overflow-y-auto">
+      <main className="relative z-10 flex-1 p-6 md:p-8 overflow-y-auto">
         {activeTab === "encode" && (
           <EncodeView
             onTaskStarted={(id, name) => {
@@ -274,6 +281,26 @@ export const App: React.FC = () => {
 
         {activeTab === "history" && <HistoryView />}
       </main>
+
+      {/* Bottom Floating Telemetry Ribbon */}
+      <footer className="relative z-10 px-6 py-2.5 border-t border-white/[0.08] glass-panel flex flex-wrap items-center justify-between text-xs font-mono text-muted-foreground">
+        <div className="flex items-center gap-3">
+          <span className="flex items-center gap-1.5 text-emerald-400 font-semibold">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            Galois Field Core: Active
+          </span>
+          <span className="text-white/20">•</span>
+          <span>Reed-Solomon RS(255,223)</span>
+          <span className="text-white/20">•</span>
+          <span>AES-256-GCM Scrypt KDF</span>
+          <span className="text-white/20">•</span>
+          <span>4K UHD (3840×2160)</span>
+        </div>
+        <div className="flex items-center gap-4 text-muted-foreground/80">
+          <span>FFmpeg 9.0 Connected</span>
+          <span className="text-emerald-400 font-semibold">YTDisk Workstation v1.0</span>
+        </div>
+      </footer>
 
       <SettingsModal
         isOpen={isSettingsOpen}

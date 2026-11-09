@@ -59,3 +59,4 @@ echo "  • Desktop app:   $BIN_DIR/ytdisk"
 echo "  • Menu launcher: $DESKTOP_DIR/ytdisk.desktop"
 echo "You can now run 'ytdisk-cli' or 'ytdisk' directly from anywhere!"
 echo "=========================================================="
+
