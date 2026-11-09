@@ -3,6 +3,7 @@
 <div align="center">
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg?style=for-the-badge)
+[![Live Website](https://img.shields.io/badge/Live_Website-GitHub_Pages-06b6d4.svg?style=for-the-badge&logo=github)](https://ousama-oujaber.github.io/YTStorage/)
 ![Rust](https://img.shields.io/badge/Rust-2024_Edition-orange.svg?style=for-the-badge&logo=rust)
 ![Tauri](https://img.shields.io/badge/Tauri_v2-Desktop_GUI-24C8DB.svg?style=for-the-badge&logo=tauri)
 ![React](https://img.shields.io/badge/React_19-TypeScript-61DAFB.svg?style=for-the-badge&logo=react)
@@ -15,6 +16,7 @@
   Encode arbitrary digital files into pristine 4K video streams with Reed–Solomon forward error correction, matrix temporal interleaving, and zero-knowledge AES-256-GCM encryption.
 </p>
 
+[🌐 Live Website](https://ousama-oujaber.github.io/YTStorage/) •
 [✨ Features](#-key-features) •
 [📥 Releases & Downloads](#-downloads--releases) •
 [🚀 Quickstart](#-quickstart) •
