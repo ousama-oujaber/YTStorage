@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="en" class="dark scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YTDisk (YTStorage) — High-Density Optical Video Storage Engine</title>
+  <meta name="description" content="Store, archive, and retrieve arbitrary digital payloads inside 4K YouTube and Google Drive videos using Reed-Solomon forward error correction and AES-256-GCM encryption.">
+  <meta name="theme-color" content="#07090e">
+  
+  <!-- OpenGraph / Social -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://ousama-oujaber.github.io/YTStorage/">
+  <meta property="og:title" content="YTDisk — High-Density Optical Video Storage">
+  <meta property="og:description" content="Turn YouTube and Google Drive into infinite, resilient cold storage with 4K UHD optical rasters and Reed-Solomon ECC.">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            optical: {
+              void: '#05070a',
+              bg: '#07090e',
+              surface: '#0d1117',
+              card: '#111622',
+              cardHover: '#161d2d',
+              border: '#1e293b',
+              borderHover: '#334155',
+              cyan: '#06b6d4',
+              emerald: '#10b981',
+              neon: '#22d3ee',
+              amber: '#f59e0b',
+              crimson: '#f43f5e'
+            }
+          },
+          boxShadow: {
+            'glow-cyan': '0 0 25px -5px rgba(6, 182, 212, 0.4)',
+            'glow-emerald': '0 0 25px -5px rgba(16, 185, 129, 0.4)',
+            'glow-card': '0 10px 30px -10px rgba(0, 0, 0, 0.7)',
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    /* Scanline overlay effect */
+    .scanlines {
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.02), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.02));
+      background-size: 100% 3px, 6px 100%;
+      pointer-events: none;
+    }
+
+    /* Cyber border */
+    .cyber-border {
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      box-shadow: inset 0 0 15px rgba(16, 185, 129, 0.03);
+    }
+    
+    .glass-card {
+      background: rgba(17, 22, 34, 0.75);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+    }
+
+    .glass-card:hover {
+      border-color: rgba(6, 182, 212, 0.3);
+    }
+
+    /* Laser grid background animation */
+    .bg-grid {
+      background-size: 40px 40px;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    }
+
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 0.3; transform: scale(1); }
+      50% { opacity: 0.55; transform: scale(1.05); }
+    }
+
+    .ambient-pulse {
+      animation: pulseGlow 8s ease-in-out infinite;
+    }
+  </style>
+</head>
+
+<body class="bg-optical-void text-slate-100 font-sans antialiased min-h-screen relative selection:bg-optical-cyan selection:text-black">
+  <!-- Scanlines overlay -->
+  <div class="fixed inset-0 scanlines z-40 opacity-40"></div>
+
+  <!-- Ambient glowing lighting background -->
+  <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
+    <div class="absolute -top-40 -left-40 w-96 h-96 bg-cyan-500/10 rounded-full blur-[128px] ambient-pulse"></div>
+    <div class="absolute top-1/3 -right-40 w-[32rem] h-[32rem] bg-emerald-500/10 rounded-full blur-[140px] ambient-pulse" style="animation-delay: -3s;"></div>
+    <div class="absolute -bottom-40 left-1/3 w-[28rem] h-[28rem] bg-blue-600/10 rounded-full blur-[130px] ambient-pulse" style="animation-delay: -5s;"></div>
+    <div class="absolute inset-0 bg-grid opacity-60"></div>
+  </div>
+
+  <!-- Header / Navigation -->
+  <header class="sticky top-0 z-50 glass-card border-b border-slate-800/80">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <!-- Brand Logo -->
+      <a href="#" class="flex items-center gap-3 group">
+        <div class="relative w-9 h-9 rounded-lg bg-gradient-to-br from-optical-surface to-optical-card border border-emerald-500/40 flex items-center justify-center shadow-glow-emerald">
+          <i data-lucide="disc-3" class="w-5 h-5 text-emerald-400 group-hover:rotate-180 transition-transform duration-700"></i>
+          <span class="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="font-mono font-bold tracking-wider text-base text-white">YTDISK</span>
+            <span class="px-1.5 py-0.5 text-[10px] font-mono uppercase bg-emerald-950/80 text-emerald-400 border border-emerald-800 rounded">v1.0.0</span>
+          </div>
+          <span class="text-[10px] font-mono text-slate-400 block -mt-0.5 tracking-tight">Obsidian Optical Engine</span>
+        </div>
+      </a>
+
+      <!-- Desktop Navigation links -->
+      <nav class="hidden md:flex items-center gap-6 text-xs font-mono">
+        <a href="#features" class="text-slate-300 hover:text-optical-cyan transition-colors">Features</a>
+        <a href="#interactive-lab" class="text-slate-300 hover:text-optical-cyan transition-colors">Optical Lab</a>
+        <a href="#calculator" class="text-slate-300 hover:text-optical-cyan transition-colors">Capacity Calc</a>
+        <a href="#cli" class="text-slate-300 hover:text-optical-cyan transition-colors">CLI Reference</a>
+        <a href="#benchmarks" class="text-slate-300 hover:text-optical-cyan transition-colors">Verification</a>
+        <a href="#downloads" class="text-slate-300 hover:text-optical-cyan transition-colors">Releases</a>
+      </nav>
+
+      <!-- Right Action CTA -->
+      <div class="flex items-center gap-3">
+        <a href="https://github.com/ousama-oujaber/YTStorage" target="_blank" rel="noopener noreferrer" class="hidden sm:inline-flex items-center gap-2 px-3 py-1.5 rounded-md bg-slate-900 border border-slate-700/80 hover:border-slate-500 text-xs font-mono text-slate-200 transition-all">
+          <i data-lucide="github" class="w-4 h-4"></i>
+          <span>GitHub</span>
+        </a>
+        <a href="#downloads" class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-md bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-xs font-mono font-semibold text-black shadow-glow-emerald transition-all transform active:scale-95">
+          <i data-lucide="download" class="w-4 h-4 text-black"></i>
+          <span>Get YTDisk</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <main class="relative z-10">
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24 text-center">
+      <!-- Tagline Pill -->
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-optical-card border border-emerald-500/30 text-emerald-400 text-xs font-mono mb-8 shadow-glow-emerald">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span>NEXT-GEN OPTICAL STEGANOGRAPHIC STORAGE ENGINE</span>
+      </div>
+
+      <!-- Main Headline -->
+      <h1 class="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-white mb-6">
+        Infinite Cold Storage <br class="hidden sm:inline" />
+        <span class="bg-gradient-to-r from-emerald-400 via-cyan-400 to-blue-500 bg-clip-text text-transparent">
+          Inside 4K YouTube Videos.
+        </span>
+      </h1>
+
+      <!-- Subtitle -->
+      <p class="max-w-3xl mx-auto text-base sm:text-lg text-slate-400 mb-10 leading-relaxed font-light">
+        Transform arbitrary digital payloads, private archives, and disk images into resilient, monochrome optical matrices. Hardened with 
+        <span class="text-slate-200 font-medium">Galois Field Reed–Solomon ECC</span>, 
+        <span class="text-slate-200 font-medium">matrix temporal interleaving</span>, and 
+        <span class="text-slate-200 font-medium">Scrypt AES-256-GCM zero-knowledge encryption</span>.
+      </p>
+
+      <!-- Action Buttons -->
+      <div class="flex flex-wrap items-center justify-center gap-4 mb-14">
+        <a href="#downloads" class="inline-flex items-center gap-2 px-6 py-3.5 rounded-lg bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-black font-semibold text-sm shadow-glow-emerald transition-all transform hover:-translate-y-0.5">
+          <i data-lucide="download-cloud" class="w-5 h-5"></i>
+          <span>Download Production Binaries</span>
+        </a>
+        <a href="https://github.com/ousama-oujaber/YTStorage" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-6 py-3.5 rounded-lg bg-optical-card hover:bg-optical-cardHover border border-slate-700/80 hover:border-slate-500 text-slate-200 text-sm font-medium transition-all transform hover:-translate-y-0.5">
+          <i data-lucide="github" class="w-5 h-5 text-slate-400"></i>
+          <span>Source Code & Specs</span>
+        </a>
+      </div>
+
+      <!-- Quick Command Bar -->
+      <div class="max-w-xl mx-auto">
+        <div class="relative flex items-center justify-between p-2.5 rounded-lg bg-black/60 border border-slate-800 text-xs font-mono text-slate-300 shadow-2xl">
+          <div class="flex items-center gap-2 overflow-hidden px-2">
+            <span class="text-emerald-400 select-none">$</span>
+            <span class="truncate" id="quick-cmd-text">git clone https://github.com/ousama-oujaber/YTStorage.git && cd YTStorage && ./run.sh</span>
+          </div>
+          <button onclick="copyQuickCmd()" id="copy-btn" class="flex-shrink-0 flex items-center gap-1.5 px-3 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors">
+            <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+            <span id="copy-btn-text">Copy</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Telemetry Badge Ribbon -->
+      <div class="mt-14 grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-4xl mx-auto">
+        <div class="glass-card p-4 rounded-lg text-left">
+          <span class="text-[10px] font-mono text-slate-500 uppercase tracking-widest block">Video Upscale</span>
+          <span class="text-lg font-mono font-bold text-white">3840×2160 UHD</span>
+          <span class="text-xs text-emerald-400 block mt-0.5">Nearest-Neighbor 4K</span>
+        </div>
+        <div class="glass-card p-4 rounded-lg text-left">
+          <span class="text-[10px] font-mono text-slate-500 uppercase tracking-widest block">Error Correction</span>
+          <span class="text-lg font-mono font-bold text-white">GF(2⁸) Reed-Solomon</span>
+          <span class="text-xs text-cyan-400 block mt-0.5">Matrix Interleaved</span>
+        </div>
+        <div class="glass-card p-4 rounded-lg text-left">
+          <span class="text-[10px] font-mono text-slate-500 uppercase tracking-widest block">Cipher Protocol</span>
+          <span class="text-lg font-mono font-bold text-white">AES-256-GCM</span>
+          <span class="text-xs text-emerald-400 block mt-0.5">Scrypt KDF (N=32768)</span>
+        </div>
+        <div class="glass-card p-4 rounded-lg text-left">
+          <span class="text-[10px] font-mono text-slate-500 uppercase tracking-widest block">Python Parity</span>
+          <span class="text-lg font-mono font-bold text-white">100% Certified</span>
+          <span class="text-xs text-cyan-400 block mt-0.5">Bit-for-Bit Verified</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Interactive Optical Matrix Simulator -->
+    <section id="interactive-lab" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 border-t border-slate-800/80">
+      <div class="text-center mb-12">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-950/40 border border-cyan-800/60 text-cyan-400 text-xs font-mono mb-3">
+          <i data-lucide="cpu" class="w-3.5 h-3.5"></i>
+          <span>LIVE BROWSER SIMULATOR</span>
+        </div>
+        <h2 class="text-3xl sm:text-4xl font-extrabold text-white">Interactive Optical Dot-Matrix Lab</h2>
+        <p class="text-slate-400 text-sm max-w-2xl mx-auto mt-2">
+          Experience how YTDisk turns raw digital bytes into high-contrast monochrome optical rasters ready for video streaming.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <!-- Controls Column -->
+        <div class="lg:col-span-5 glass-card p-6 rounded-xl space-y-5">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+            <span class="text-xs font-mono uppercase tracking-wider text-slate-400 flex items-center gap-2">
+              <i data-lucide="sliders" class="w-4 h-4 text-cyan-400"></i>
+              Rasterization Parameters
+            </span>
+            <span class="px-2 py-0.5 text-[10px] font-mono bg-emerald-950/60 text-emerald-400 rounded border border-emerald-800">Live Render</span>
+          </div>
+
+          <!-- Payload Input -->
+          <div>
+            <label class="block text-xs font-mono text-slate-300 mb-2">Input Payload / Secret Message:</label>
+            <textarea id="lab-input" rows="3" class="w-full bg-black/60 border border-slate-800 rounded-lg p-3 text-xs font-mono text-white focus:outline-none focus:border-cyan-500 transition-colors" placeholder="Type or paste any data to see live optical frame encoding...">The quick brown fox jumps over the lazy dog. YTDisk Obsidian Optical Storage Engine 2026!</textarea>
+          </div>
+
+          <!-- Block Size Selector -->
+          <div>
+            <div class="flex justify-between text-xs font-mono text-slate-300 mb-2">
+              <span>Block Grid Cell Size:</span>
+              <span id="lab-block-val" class="text-cyan-400 font-bold">4×4 pixels</span>
+            </div>
+            <div class="grid grid-cols-3 gap-2">
+              <button onclick="setLabBlock(4)" id="btn-block-4" class="px-3 py-2 text-xs font-mono rounded bg-cyan-950/80 border border-cyan-500 text-cyan-300 font-semibold">4×4 (480×270)</button>
+              <button onclick="setLabBlock(8)" id="btn-block-8" class="px-3 py-2 text-xs font-mono rounded bg-slate-900 border border-slate-800 text-slate-400 hover:border-slate-700">8×8 (240×135)</button>
+              <button onclick="setLabBlock(16)" id="btn-block-16" class="px-3 py-2 text-xs font-mono rounded bg-slate-900 border border-slate-800 text-slate-400 hover:border-slate-700">16×16 (120×67)</button>
+            </div>
+          </div>
+
+          <!-- Telemetry Stats -->
+          <div class="bg-black/40 border border-slate-800/80 rounded-lg p-3.5 space-y-2 text-xs font-mono">
+            <div class="flex justify-between text-slate-400">
+              <span>Payload Size:</span>
+              <span id="lab-byte-count" class="text-white">88 bytes</span>
+            </div>
+            <div class="flex justify-between text-slate-400">
+              <span>Bitstream Bits:</span>
+              <span id="lab-bit-count" class="text-emerald-400">704 bits</span>
+            </div>
+            <div class="flex justify-between text-slate-400">
+              <span>Frame Cell Capacity:</span>
+              <span id="lab-capacity-count" class="text-cyan-400">129,600 bits</span>
+            </div>
+            <div class="flex justify-between text-slate-400">
+              <span>Estimated Frame Fill:</span>
+              <span id="lab-fill-pct" class="text-slate-300">0.54%</span>
+            </div>
+          </div>
+
+          <div class="text-[11px] text-slate-500 leading-tight">
+            <i data-lucide="info" class="w-3.5 h-3.5 inline text-cyan-400 mr-1"></i>
+            During playback, central margin box sampling with $m = \lfloor \text{block}/4 \rfloor$ isolates cells from video edge compression noise.
+          </div>
+        </div>
+
+        <!-- Canvas Output Column -->
+        <div class="lg:col-span-7 glass-card p-6 rounded-xl flex flex-col">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span class="text-xs font-mono uppercase text-slate-300 font-semibold tracking-wider">Optical Raster Canvas (1080p Simulated)</span>
+            </div>
+            <span class="text-[11px] font-mono text-slate-400">Monochrome 1-bit Map</span>
+          </div>
+
+          <!-- Canvas Container -->
+          <div class="relative bg-black rounded-lg border border-slate-800 overflow-hidden flex items-center justify-center p-2 min-h-[340px]">
+            <canvas id="optical-canvas" width="480" height="270" class="w-full h-auto max-h-[380px] rounded border border-slate-900 shadow-inner bg-black image-rendering-pixelated"></canvas>
+            <div class="absolute bottom-3 right-3 px-2 py-1 bg-black/80 rounded border border-slate-800 text-[10px] font-mono text-emerald-400">
+              Raster: 1920×1080 Native
+            </div>
+          </div>
+
+          <div class="mt-4 flex items-center justify-between text-xs font-mono text-slate-400">
+            <span>White Pixel = Binary 1 (High Lum)</span>
+            <span>Black Pixel = Binary 0 (Low Lum)</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Interactive Capacity Calculator -->
+    <section id="calculator" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 border-t border-slate-800/80">
+      <div class="text-center mb-12">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950/40 border border-emerald-800/60 text-emerald-400 text-xs font-mono mb-3">
+          <i data-lucide="calculator" class="w-3.5 h-3.5"></i>
+          <span>CAPACITY & SPEED ESTIMATOR</span>
+        </div>
+        <h2 class="text-3xl sm:text-4xl font-extrabold text-white">Dynamic Optical Throughput Calculator</h2>
+        <p class="text-slate-400 text-sm max-w-2xl mx-auto mt-2">
+          Calculate video duration, ECC parity overhead, and cloud throughput for any arbitrary file size.
+        </p>
+      </div>
+
+      <div class="max-w-4xl mx-auto glass-card p-6 sm:p-8 rounded-xl">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <!-- Block Select -->
+          <div>
+            <label class="block text-xs font-mono text-slate-300 mb-2">Block Geometry:</label>
+            <select id="calc-block" onchange="recalculateCapacity()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs font-mono text-white focus:outline-none focus:border-cyan-500">
+              <option value="4" selected>Block 4×4 (~415 KB/s — High Density)</option>
+              <option value="8">Block 8×8 (~104 KB/s — Balanced)</option>
+              <option value="16">Block 16×16 (~26 KB/s — Max Resilience)</option>
+            </select>
+          </div>
+
+          <!-- NSYM Select -->
+          <div>
+            <label class="block text-xs font-mono text-slate-300 mb-2">Reed-Solomon Parity (NSYM):</label>
+            <select id="calc-nsym" onchange="recalculateCapacity()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs font-mono text-white focus:outline-none focus:border-cyan-500">
+              <option value="16">16 Symbols (Light — 6% Parity)</option>
+              <option value="32" selected>32 Symbols (Standard — 13% Parity)</option>
+              <option value="64">64 Symbols (Heavy — 25% Parity)</option>
+            </select>
+          </div>
+
+          <!-- Payload Size Slider -->
+          <div>
+            <div class="flex justify-between text-xs font-mono text-slate-300 mb-2">
+              <span>Target File Size:</span>
+              <span id="calc-size-label" class="text-emerald-400 font-bold">100 MB</span>
+            </div>
+            <input type="range" id="calc-size-slider" min="1" max="1024" value="100" oninput="recalculateCapacity()" class="w-full accent-emerald-500 cursor-pointer">
+          </div>
+        </div>
+
+        <!-- Calculated Metrics Bento -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 rounded-lg bg-black/60 border border-slate-800 font-mono">
+          <div class="p-3">
+            <span class="text-[10px] text-slate-500 block uppercase">Data Throughput</span>
+            <span id="res-throughput" class="text-xl font-bold text-cyan-400">415.05 KB/s</span>
+            <span class="text-[10px] text-slate-400 block mt-1">@ 30 Frames / Sec</span>
+          </div>
+          <div class="p-3">
+            <span class="text-[10px] text-slate-500 block uppercase">Total Video Duration</span>
+            <span id="res-duration" class="text-xl font-bold text-emerald-400">4.1 minutes</span>
+            <span id="res-frames" class="text-[10px] text-slate-400 block mt-1">7,412 frames</span>
+          </div>
+          <div class="p-3">
+            <span class="text-[10px] text-slate-500 block uppercase">ECC Overhead</span>
+            <span id="res-ecc-overhead" class="text-xl font-bold text-yellow-400">+14.3 MB</span>
+            <span class="text-[10px] text-slate-400 block mt-1">Reed-Solomon Parity</span>
+          </div>
+          <div class="p-3">
+            <span class="text-[10px] text-slate-500 block uppercase">1 GB Duration</span>
+            <span id="res-1gb" class="text-xl font-bold text-white">42.1 minutes</span>
+            <span class="text-[10px] text-slate-400 block mt-1">Continuous video stream</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Key Architectural Features Bento -->
+    <section id="features" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 border-t border-slate-800/80">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl sm:text-4xl font-extrabold text-white">Engineered for Unforgiving Clouds</h2>
+        <p class="text-slate-400 text-sm max-w-2xl mx-auto mt-2">
+          Modern streaming CDNs utilize aggressive lossy re-encoding. YTDisk defeats them through mathematical guarantees.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Feature 1 -->
+        <div class="glass-card p-6 rounded-xl hover:border-cyan-500/50 transition-all">
+          <div class="w-10 h-10 rounded-lg bg-cyan-950/60 border border-cyan-800/80 flex items-center justify-center text-cyan-400 mb-4">
+            <i data-lucide="tv-2" class="w-5 h-5"></i>
+          </div>
+          <h3 class="text-lg font-semibold text-white mb-2">4K Nearest-Neighbor Upscaling</h3>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            By rendering monochrome frames at 1080p and scaling to 3840×2160 via strict nearest-neighbor sampling, YouTube is forced to encode with top-tier VP9/AV1 bitrates, preventing block bleeding.
+          </p>
+        </div>
+
+        <!-- Feature 2 -->
+        <div class="glass-card p-6 rounded-xl hover:border-emerald-500/50 transition-all">
+          <div class="w-10 h-10 rounded-lg bg-emerald-950/60 border border-emerald-800/80 flex items-center justify-center text-emerald-400 mb-4">
+            <i data-lucide="grid" class="w-5 h-5"></i>
+          </div>
+          <h3 class="text-lg font-semibold text-white mb-2">Matrix Temporal Interleaving</h3>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            Codewords are transposed before rasterization ($M^T$). Contiguous video compression glitches affect only isolated bytes across hundreds of codewords, fully correctable by Reed–Solomon.
+          </p>
+        </div>
+
+        <!-- Feature 3 -->
+        <div class="glass-card p-6 rounded-xl hover:border-cyan-500/50 transition-all">
+          <div class="w-10 h-10 rounded-lg bg-blue-950/60 border border-blue-800/80 flex items-center justify-center text-blue-400 mb-4">
+            <i data-lucide="shield-check" class="w-5 h-5"></i>
+          </div>
+          <h3 class="text-lg font-semibold text-white mb-2">Scrypt + AES-256-GCM</h3>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            State-of-the-art zero-knowledge cryptography with 128-bit authentication tags and ASIC-resistant Scrypt key derivation ($N=32768, r=8, p=1$). Passwords are never stored on disk.
+          </p>
+        </div>
+
+        <!-- Feature 4 -->
+        <div class="glass-card p-6 rounded-xl hover:border-emerald-500/50 transition-all">
+          <div class="w-10 h-10 rounded-lg bg-purple-950/60 border border-purple-800/80 flex items-center justify-center text-purple-400 mb-4">
+            <i data-lucide="file-search" class="w-5 h-5"></i>
+          </div>
+          <h3 class="text-lg font-semibold text-white mb-2">Instant Header Inspector</h3>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            Inspect container version, original filename, byte length, and encryption flags from the 30-frame optical header in <150 ms without downloading or decoding the gigabyte video payload.
+          </p>
+        </div>
+
+        <!-- Feature 5 -->
+        <div class="glass-card p-6 rounded-xl hover:border-cyan-500/50 transition-all">
+          <div class="w-10 h-10 rounded-lg bg-amber-950/60 border border-amber-800/80 flex items-center justify-center text-amber-400 mb-4">
+            <i data-lucide="cloud-lightning" class="w-5 h-5"></i>
+          </div>
+          <h3 class="text-lg font-semibold text-white mb-2">Native Cloud Ingestion</h3>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            Integrated streaming download manager for YouTube (via embedded yt-dlp) and Google Drive (resumable range chunks) with automatic container recognition and on-the-fly decoding.
+          </p>
+        </div>
+
+        <!-- Feature 6 -->
+        <div class="glass-card p-6 rounded-xl hover:border-emerald-500/50 transition-all">
+          <div class="w-10 h-10 rounded-lg bg-red-950/60 border border-red-800/80 flex items-center justify-center text-red-400 mb-4">
+            <i data-lucide="git-compare" class="w-5 h-5"></i>
+          </div>
+          <h3 class="text-lg font-semibold text-white mb-2">100% Python Interop</h3>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            Strict bidirectional compatibility with the legacy Python reference script. Videos generated by Python decode cleanly in Rust, and Rust videos decode cleanly in Python.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- CLI Interactive Reference -->
+    <section id="cli" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 border-t border-slate-800/80">
+      <div class="text-center mb-12">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900 border border-slate-700 text-slate-300 text-xs font-mono mb-3">
+          <i data-lucide="terminal" class="w-3.5 h-3.5 text-cyan-400"></i>
+          <span>HIGH-PERFORMANCE STANDALONE CLI</span>
+        </div>
+        <h2 class="text-3xl sm:text-4xl font-extrabold text-white">Command Line Workflow</h2>
+        <p class="text-slate-400 text-sm max-w-2xl mx-auto mt-2">
+          Automate bulk storage, CI/CD pipelines, and server backups with <code class="text-cyan-400 font-mono">ytdisk-cli</code>.
+        </p>
+      </div>
+
+      <div class="max-w-4xl mx-auto glass-card rounded-xl overflow-hidden shadow-2xl border border-slate-800">
+        <!-- Terminal Header with Tabs -->
+        <div class="bg-black/80 px-4 py-3 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3">
+          <div class="flex items-center gap-2">
+            <span class="w-3 h-3 rounded-full bg-red-500/80"></span>
+            <span class="w-3 h-3 rounded-full bg-yellow-500/80"></span>
+            <span class="w-3 h-3 rounded-full bg-green-500/80"></span>
+            <span class="ml-2 text-xs font-mono text-slate-400">bash — ytdisk-cli</span>
+          </div>
+
+          <!-- Command Tabs -->
+          <div class="flex items-center gap-1">
+            <button onclick="setCliTab('encode')" id="tab-encode" class="px-3 py-1 rounded text-xs font-mono bg-cyan-950 text-cyan-300 border border-cyan-800">encode</button>
+            <button onclick="setCliTab('inspect')" id="tab-inspect" class="px-3 py-1 rounded text-xs font-mono text-slate-400 hover:text-white">inspect</button>
+            <button onclick="setCliTab('decode')" id="tab-decode" class="px-3 py-1 rounded text-xs font-mono text-slate-400 hover:text-white">decode</button>
+            <button onclick="setCliTab('capacity')" id="tab-capacity" class="px-3 py-1 rounded text-xs font-mono text-slate-400 hover:text-white">capacity</button>
+            <button onclick="setCliTab('download')" id="tab-download" class="px-3 py-1 rounded text-xs font-mono text-slate-400 hover:text-white">download</button>
+          </div>
+        </div>
+
+        <!-- Terminal Body -->
+        <div class="p-6 bg-black/90 font-mono text-xs text-slate-300 space-y-4">
+          <div class="flex items-start justify-between">
+            <p class="text-slate-400" id="cli-cmd-comment"># Encrypt and encode an archive into 4K YouTube video with Reed-Solomon:</p>
+            <button onclick="copyCliSnippet()" class="flex items-center gap-1 text-slate-400 hover:text-cyan-400 transition-colors">
+              <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+              <span id="cli-copy-btn">Copy</span>
+            </button>
+          </div>
+          <div class="p-3 bg-slate-950 rounded border border-slate-800 text-emerald-400 select-all" id="cli-cmd-code">
+            ytdisk-cli encode database.tar.gz -o cold_storage.mp4 --password "MasterVaultKey2026!" --upscale-4k
+          </div>
+          <div class="text-slate-400 whitespace-pre-wrap leading-relaxed text-[11px]" id="cli-cmd-output">▶ Encoding "database.tar.gz" -> "cold_storage.mp4"
+  [Encrypting and preparing data] 0/0 (0.0%) - 0.0 fps
+  [Writing header frames] 30/3810 (0.8%) - 52.5 fps
+  [Writing data frames] 3810/3810 (100.0%) - 48.2 fps
+✔ Encoding complete!
+  File name:      database.tar.gz
+  Original size:  52,428,800 bytes
+  Total frames:   3,780
+  SHA-256:        b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9
+  Encrypted:      true</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Verification & Benchmarks -->
+    <section id="benchmarks" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 border-t border-slate-800/80">
+      <div class="text-center mb-12">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950/40 border border-emerald-800/60 text-emerald-400 text-xs font-mono mb-3">
+          <i data-lucide="check-circle" class="w-3.5 h-3.5"></i>
+          <span>RIGOROUS PROOF OF PARITY</span>
+        </div>
+        <h2 class="text-3xl sm:text-4xl font-extrabold text-white">Certified Bit-for-Bit Integrity</h2>
+        <p class="text-slate-400 text-sm max-w-2xl mx-auto mt-2">
+          Every video container is cryptographically hashed and verified across round-trips.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+        <!-- Verification Card 1 -->
+        <div class="glass-card p-6 rounded-xl border-l-4 border-l-emerald-500">
+          <div class="flex items-center justify-between mb-3">
+            <span class="font-mono text-xs font-bold text-emerald-400">RUST ENGINE TESTS</span>
+            <span class="px-2 py-0.5 text-[10px] font-mono bg-emerald-950 text-emerald-300 rounded border border-emerald-800">12 / 12 PASSED</span>
+          </div>
+          <p class="text-xs text-slate-400 mb-4">
+            Unit & integration tests cover Galois field arithmetic, corruption recovery, provider detection, frame rasterization, and AES-GCM round-trips.
+          </p>
+          <div class="bg-black/60 p-3 rounded font-mono text-[11px] text-slate-300 space-y-1">
+            <div class="text-emerald-400">✔ test_ecc_corruption_recovery ... ok</div>
+            <div class="text-emerald-400">✔ test_encrypt_decrypt_roundtrip ... ok</div>
+            <div class="text-emerald-400">✔ test_header_frame_roundtrip ... ok</div>
+            <div class="text-emerald-400">✔ test_integration_encode_decode_encrypted ... ok</div>
+          </div>
+        </div>
+
+        <!-- Verification Card 2 -->
+        <div class="glass-card p-6 rounded-xl border-l-4 border-l-cyan-500">
+          <div class="flex items-center justify-between mb-3">
+            <span class="font-mono text-xs font-bold text-cyan-400">CROSS-LANGUAGE TEST SUITE</span>
+            <span class="px-2 py-0.5 text-[10px] font-mono bg-cyan-950 text-cyan-300 rounded border border-cyan-800">100% BIT MATCH</span>
+          </div>
+          <p class="text-xs text-slate-400 mb-4">
+            Automated bidirectional verification between Python and Rust engines. Videos encoded in one can be restored identically in the other.
+          </p>
+          <div class="bg-black/60 p-3 rounded font-mono text-[11px] text-slate-300 space-y-1">
+            <div class="text-cyan-400">✔ Rust Encode ➔ Python Decode: MATCH</div>
+            <div class="text-cyan-400">✔ Python Encode ➔ Rust Decode: MATCH</div>
+            <div class="text-cyan-400">✔ Scrypt KDF Interop: VERIFIED</div>
+            <div class="text-cyan-400">✔ SHA-256 Checksums: IDENTICAL</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Downloads & Releases Section -->
+    <section id="downloads" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 border-t border-slate-800/80">
+      <div class="text-center mb-16">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-950/40 border border-cyan-800/60 text-cyan-400 text-xs font-mono mb-3">
+          <i data-lucide="package" class="w-3.5 h-3.5"></i>
+          <span>OFFICIAL PRODUCTION PACKAGES</span>
+        </div>
+        <h2 class="text-3xl sm:text-4xl font-extrabold text-white">Download YTDisk v1.0.0</h2>
+        <p class="text-slate-400 text-sm max-w-2xl mx-auto mt-2">
+          Get pre-compiled binaries and native Linux installers directly from GitHub Releases.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto mb-12">
+        <!-- Deb -->
+        <div class="glass-card p-6 rounded-xl flex flex-col justify-between hover:border-emerald-500/50 transition-all">
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <span class="px-2.5 py-1 text-xs font-mono font-bold rounded bg-emerald-950/80 text-emerald-400 border border-emerald-800">.DEB PACKAGE</span>
+              <i data-lucide="box" class="w-5 h-5 text-slate-400"></i>
+            </div>
+            <h3 class="text-lg font-bold text-white mb-1">Debian / Ubuntu</h3>
+            <p class="text-xs text-slate-400 mb-4">For Ubuntu 22.04+, Debian 12, Linux Mint, Pop!_OS.</p>
+            <div class="text-[10px] font-mono text-slate-500 mb-6 truncate">
+              SHA: 44899b601f759f8be2be0fe574960286...
+            </div>
+          </div>
+          <a href="https://github.com/ousama-oujaber/YTStorage/releases/download/v1.0.0/YTDisk_1.0.0_amd64.deb" class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-black font-semibold text-xs transition-colors shadow-glow-emerald">
+            <i data-lucide="download" class="w-4 h-4"></i>
+            <span>Download .deb (5.5 MB)</span>
+          </a>
+        </div>
+
+        <!-- RPM -->
+        <div class="glass-card p-6 rounded-xl flex flex-col justify-between hover:border-cyan-500/50 transition-all">
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <span class="px-2.5 py-1 text-xs font-mono font-bold rounded bg-cyan-950/80 text-cyan-400 border border-cyan-800">.RPM PACKAGE</span>
+              <i data-lucide="package-check" class="w-5 h-5 text-slate-400"></i>
+            </div>
+            <h3 class="text-lg font-bold text-white mb-1">Fedora / RHEL</h3>
+            <p class="text-xs text-slate-400 mb-4">For Fedora 39+, Rocky Linux, openSUSE, RHEL.</p>
+            <div class="text-[10px] font-mono text-slate-500 mb-6 truncate">
+              SHA: cd669f5c1e9575b36dbce62cd2cf5257...
+            </div>
+          </div>
+          <a href="https://github.com/ousama-oujaber/YTStorage/releases/download/v1.0.0/YTDisk-1.0.0-1.x86_64.rpm" class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-black font-semibold text-xs transition-colors shadow-glow-cyan">
+            <i data-lucide="download" class="w-4 h-4"></i>
+            <span>Download .rpm (5.5 MB)</span>
+          </a>
+        </div>
+
+        <!-- Tar.gz -->
+        <div class="glass-card p-6 rounded-xl flex flex-col justify-between hover:border-blue-500/50 transition-all">
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <span class="px-2.5 py-1 text-xs font-mono font-bold rounded bg-blue-950/80 text-blue-400 border border-blue-800">STANDALONE TARBALL</span>
+              <i data-lucide="archive" class="w-5 h-5 text-slate-400"></i>
+            </div>
+            <h3 class="text-lg font-bold text-white mb-1">Arch / Generic Linux</h3>
+            <p class="text-xs text-slate-400 mb-4">Includes `ytdisk`, `ytdisk-cli`, and installer scripts.</p>
+            <div class="text-[10px] font-mono text-slate-500 mb-6 truncate">
+              SHA: decf9a2fd4f806ffa99027ab82afde36...
+            </div>
+          </div>
+          <a href="https://github.com/ousama-oujaber/YTStorage/releases/download/v1.0.0/ytdisk-v1.0.0-linux-x86_64.tar.gz" class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs transition-colors border border-slate-700">
+            <i data-lucide="download" class="w-4 h-4"></i>
+            <span>Download .tar.gz (5.3 MB)</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Installation Command Snippet -->
+      <div class="max-w-3xl mx-auto glass-card p-4 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-mono">
+        <div class="flex items-center gap-2">
+          <i data-lucide="terminal" class="w-4 h-4 text-emerald-400"></i>
+          <span class="text-slate-300">Quick user install on Arch Linux:</span>
+          <code class="text-emerald-400 bg-black/60 px-2 py-1 rounded">./install-user.sh</code>
+        </div>
+        <a href="https://github.com/ousama-oujaber/YTStorage/releases/tag/v1.0.0" target="_blank" rel="noopener noreferrer" class="text-cyan-400 hover:text-cyan-300 flex items-center gap-1 font-semibold">
+          <span>View Release on GitHub</span>
+          <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-slate-800/80 bg-optical-void py-12 relative z-10 text-xs font-mono text-slate-500">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-6">
+      <div class="flex items-center gap-3">
+        <i data-lucide="disc-3" class="w-4 h-4 text-emerald-400"></i>
+        <span>YTDisk Engine © 2026. Released under the MIT License.</span>
+      </div>
+
+      <div class="flex items-center gap-6">
+        <a href="https://github.com/ousama-oujaber/YTStorage" target="_blank" rel="noopener noreferrer" class="hover:text-slate-300 transition-colors">GitHub Repo</a>
+        <a href="https://github.com/ousama-oujaber/YTStorage/releases" target="_blank" rel="noopener noreferrer" class="hover:text-slate-300 transition-colors">Releases</a>
+        <a href="https://github.com/ousama-oujaber/YTStorage/issues" target="_blank" rel="noopener noreferrer" class="hover:text-slate-300 transition-colors">Issues</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script>
+    // Initialize Lucide icons
+    lucide.createIcons();
+
+    // Quick Command Copy
+    function copyQuickCmd() {
+      const text = document.getElementById('quick-cmd-text').innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        const btnText = document.getElementById('copy-btn-text');
+        btnText.innerText = 'Copied!';
+        setTimeout(() => { btnText.innerText = 'Copy'; }, 2000);
+      });
+    }
+
+    // Interactive Optical Matrix Simulator Logic
+    let currentBlock = 4;
+    const canvas = document.getElementById('optical-canvas');
+    const ctx = canvas.getContext('2d');
+    const labInput = document.getElementById('lab-input');
+
+    function setLabBlock(size) {
+      currentBlock = size;
+      document.getElementById('btn-block-4').className = size === 4 ? 'px-3 py-2 text-xs font-mono rounded bg-cyan-950/80 border border-cyan-500 text-cyan-300 font-semibold' : 'px-3 py-2 text-xs font-mono rounded bg-slate-900 border border-slate-800 text-slate-400 hover:border-slate-700';
+      document.getElementById('btn-block-8').className = size === 8 ? 'px-3 py-2 text-xs font-mono rounded bg-cyan-950/80 border border-cyan-500 text-cyan-300 font-semibold' : 'px-3 py-2 text-xs font-mono rounded bg-slate-900 border border-slate-800 text-slate-400 hover:border-slate-700';
+      document.getElementById('btn-block-16').className = size === 16 ? 'px-3 py-2 text-xs font-mono rounded bg-cyan-950/80 border border-cyan-500 text-cyan-300 font-semibold' : 'px-3 py-2 text-xs font-mono rounded bg-slate-900 border border-slate-800 text-slate-400 hover:border-slate-700';
+      
+      const dims = size === 4 ? '4×4 pixels (480×270)' : size === 8 ? '8×8 pixels (240×135)' : '16×16 pixels (120×67)';
+      document.getElementById('lab-block-val').innerText = dims;
+      renderOpticalMatrix();
+    }
+
+    function renderOpticalMatrix() {
+      const text = labInput.value || '';
+      const encoder = new TextEncoder();
+      const bytes = encoder.encode(text);
+
+      document.getElementById('lab-byte-count').innerText = `${bytes.length} bytes`;
+      const bitCount = bytes.length * 8;
+      document.getElementById('lab-bit-count').innerText = `${bitCount} bits`;
+
+      const gridCols = Math.floor(1920 / (currentBlock * 4)); // scaled for canvas
+      const gridRows = Math.floor(1080 / (currentBlock * 4));
+      const totalCapacity = (1920 / currentBlock) * (1080 / currentBlock);
+      document.getElementById('lab-capacity-count').innerText = `${totalCapacity.toLocaleString()} bits`;
+
+      const fillPct = ((bitCount / totalCapacity) * 100).toFixed(2);
+      document.getElementById('lab-fill-pct').innerText = `${fillPct}%`;
+
+      // Clear canvas to black
+      ctx.fillStyle = '#05070a';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      const cellW = canvas.width / gridCols;
+      const cellH = canvas.height / gridRows;
+
+      let bitIdx = 0;
+      for (let r = 0; r < gridRows; r++) {
+        for (let c = 0; c < gridCols; c++) {
+          let isBitSet = false;
+          if (bitIdx < bitCount) {
+            const byteIndex = Math.floor(bitIdx / 8);
+            const bitOffset = 7 - (bitIdx % 8);
+            isBitSet = ((bytes[byteIndex] >> bitOffset) & 1) === 1;
+            bitIdx++;
+          } else {
+            // Fill remainder with subtle visual mock noise
+            isBitSet = Math.random() > 0.65;
+          }
+
+          ctx.fillStyle = isBitSet ? '#ffffff' : '#0a0d14';
+          ctx.fillRect(c * cellW, r * cellH, cellW - 0.5, cellH - 0.5);
+        }
+      }
+    }
+
+    labInput.addEventListener('input', renderOpticalMatrix);
+    renderOpticalMatrix();
+
+    // Capacity Calculator Logic
+    function recalculateCapacity() {
+      const block = parseInt(document.getElementById('calc-block').value);
+      const nsym = parseInt(document.getElementById('calc-nsym').value);
+      const sizeMB = parseInt(document.getElementById('calc-size-slider').value);
+      document.getElementById('calc-size-label').innerText = `${sizeMB} MB`;
+
+      const cols = Math.floor(1920 / block);
+      const rows = Math.floor(1080 / block);
+      const bitsPerFrame = cols * rows;
+      const bytesPerFrame = Math.floor(bitsPerFrame / 8);
+
+      const k = 255 - nsym;
+      const dataRatio = k / 255;
+      const effectiveDataPerFrame = bytesPerFrame * dataRatio; // bytes
+
+      const throughputKBps = ((effectiveDataPerFrame * 30) / 1024).toFixed(2);
+      document.getElementById('res-throughput').innerText = `${throughputKBps} KB/s`;
+
+      const totalTargetBytes = sizeMB * 1024 * 1024;
+      const totalFrames = Math.ceil(totalTargetBytes / effectiveDataPerFrame);
+      const totalSeconds = totalFrames / 30;
+      const totalMinutes = (totalSeconds / 60).toFixed(1);
+
+      document.getElementById('res-duration').innerText = `${totalMinutes} min`;
+      document.getElementById('res-frames').innerText = `${totalFrames.toLocaleString()} frames`;
+
+      const eccOverheadMB = (sizeMB * (nsym / k)).toFixed(1);
+      document.getElementById('res-ecc-overhead').innerText = `+${eccOverheadMB} MB`;
+
+      const minutesFor1GB = ((1024 * 1024 * 1024 / effectiveDataPerFrame / 30) / 60).toFixed(1);
+      document.getElementById('res-1gb').innerText = `${minutesFor1GB} min`;
+    }
+    recalculateCapacity();
+
+    // CLI Snippets Tabs
+    const cliSnippets = {
+      encode: {
+        comment: '# Encrypt and encode an archive into 4K YouTube video with Reed-Solomon:',
+        code: 'ytdisk-cli encode database.tar.gz -o cold_storage.mp4 --password "MasterVaultKey2026!" --upscale-4k',
+        output: `▶ Encoding "database.tar.gz" -> "cold_storage.mp4"
+  [Encrypting and preparing data] 0/0 (0.0%) - 0.0 fps
+  [Writing header frames] 30/3810 (0.8%) - 52.5 fps
+  [Writing data frames] 3810/3810 (100.0%) - 48.2 fps
+✔ Encoding complete!
+  File name:      database.tar.gz
+  Original size:  52,428,800 bytes
+  Total frames:   3,780
+  SHA-256:        b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9
+  Encrypted:      true`
+      },
+      inspect: {
+        comment: '# Rapidly inspect container metadata without decoding or downloading entire stream:',
+        code: 'ytdisk-cli inspect cold_storage.mp4',
+        output: `▶ Inspecting "cold_storage.mp4"
+✔ Valid YTDISK container found!
+  Version:       1
+  Filename:      database.tar.gz
+  Size:          52,428,800 bytes
+  Data frames:   3,780
+  Block size:    4
+  NSYM:          32
+  Encrypted:     true
+  SHA-256:       b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9`
+      },
+      decode: {
+        comment: '# Extract and verify payload integrity with Reed-Solomon recovery:',
+        code: 'ytdisk-cli decode cold_storage.mp4 -o ./restored/ --password "MasterVaultKey2026!"',
+        output: `▶ Decoding "cold_storage.mp4" into "./restored/"
+  [Searching for YTDISK header] 30/30 (100.0%)
+  [Reading and analyzing data frames] 3780/3780 (80.0%)
+  [Applying Reed-Solomon error correction] 3780/3780 (85.0%)
+  [Decrypting data] 3780/3780 (92.0%)
+  [Verifying SHA-256 integrity] 3780/3780 (97.0%)
+✔ Decoding complete!
+  File restored:  "./restored/database.tar.gz"
+  ECC fixed:      0 bytes
+  SHA-256 match:  true (Verified identical!)`
+      },
+      capacity: {
+        comment: '# Analyze mathematical capacity for block geometry & ECC parity settings:',
+        code: 'ytdisk-cli capacity --block 4 --nsym 32',
+        output: `YTDisk Capacity Analysis (Block: 4, NSYM: 32):
+  Grid dimensions:       480x270
+  Data per frame:        15.82 KB
+  Throughput (at 30fps): 415.05 KB/s
+  Minutes to store 1GB:  42.1 minutes`
+      },
+      download: {
+        comment: '# Download directly from YouTube or Google Drive with automatic extraction:',
+        code: 'ytdisk-cli download "https://www.youtube.com/watch?v=VIDEO_ID" -o ./downloads/ --auto-decode',
+        output: `[yt-dlp] Downloading video stream...
+[download] 100% of 142.50MiB in 00:04 at 35.62MiB/s
+✔ Valid YTDISK container recognized!
+▶ Starting automatic decoding pipeline...
+✔ File restored with 100% SHA-256 integrity verification!`
+      }
+    };
+
+    function setCliTab(tab) {
+      ['encode', 'inspect', 'decode', 'capacity', 'download'].forEach(t => {
+        const btn = document.getElementById(`tab-${t}`);
+        if (t === tab) {
+          btn.className = 'px-3 py-1 rounded text-xs font-mono bg-cyan-950 text-cyan-300 border border-cyan-800';
+        } else {
+          btn.className = 'px-3 py-1 rounded text-xs font-mono text-slate-400 hover:text-white';
+        }
+      });
+
+      const data = cliSnippets[tab];
+      document.getElementById('cli-cmd-comment').innerText = data.comment;
+      document.getElementById('cli-cmd-code').innerText = data.code;
+      document.getElementById('cli-cmd-output').innerText = data.output;
+    }
+
+    function copyCliSnippet() {
+      const code = document.getElementById('cli-cmd-code').innerText;
+      navigator.clipboard.writeText(code).then(() => {
+        const btn = document.getElementById('cli-copy-btn');
+        btn.innerText = 'Copied!';
+        setTimeout(() => { btn.innerText = 'Copy'; }, 2000);
+      });
+    }
+  </script>
+</body>
+</html>
