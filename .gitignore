@@ -1,0 +1,39 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Build & Rust
+target/
+src-tauri/target/
+dist/
+dist-ssr/
+
+# Python virtual environment
+.venv/
+__pycache__/
+*.pyc
+
+# Local config & temporary media
+*.mp4
+*.bin
+*.local
+
+# Node & package managers
+node_modules/
+
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

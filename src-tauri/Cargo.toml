@@ -1,0 +1,50 @@
+[package]
+name = "ytdisk"
+version = "1.0.0"
+description = "Store files inside 4K YouTube videos with Reed-Solomon error correction"
+authors = ["Protocol"]
+edition = "2024"
+
+[lib]
+name = "ytdisk_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[[bin]]
+name = "ytdisk"
+path = "src/main.rs"
+
+[[bin]]
+name = "ytdisk-cli"
+path = "src/bin/cli.rs"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-opener = "2"
+tauri-plugin-dialog = "2"
+rfd = "0.18"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+reed-solomon = "0.2.1"
+aes-gcm = "0.10.3"
+scrypt = "0.11.0"
+sha2 = "0.10.8"
+rand = "0.8.5"
+tokio = { version = "1", features = ["full"] }
+reqwest = { version = "0.12", features = ["stream", "cookies"] }
+futures-util = "0.3"
+regex = "1.10"
+which = "7.0"
+chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "1.8", features = ["v4", "serde"] }
+clap = { version = "4.5", features = ["derive"] }
+dirs = "6.0"
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = 3
+panic = "abort"
+strip = true

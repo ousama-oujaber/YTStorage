@@ -1,0 +1,3 @@
+[target.x86_64-unknown-linux-gnu]
+rustflags = ["-L", "/home/protocol/.local/opt/webkit2gtk/usr/lib"]
+
