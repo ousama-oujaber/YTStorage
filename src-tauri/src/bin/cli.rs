@@ -11,6 +11,7 @@ use ytdisk_lib::engine::{
 
 #[derive(Parser)]
 #[command(name = "ytdisk")]
+#[command(version = "1.0.0")]
 #[command(about = "YTDisk — Store and retrieve files inside 4K YouTube videos with Reed-Solomon ECC")]
 struct Cli {
     #[command(subcommand)]
