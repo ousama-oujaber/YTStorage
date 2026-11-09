@@ -22,6 +22,7 @@ __pycache__/
 *.mp4
 *.bin
 *.local
+release-artifacts/
 
 # Node & package managers
 node_modules/

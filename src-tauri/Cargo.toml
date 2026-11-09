@@ -2,7 +2,7 @@
 name = "ytdisk"
 version = "1.0.0"
 description = "Store files inside 4K YouTube videos with Reed-Solomon error correction"
-authors = ["Protocol"]
+authors = ["Ousama Oujaber <oujaberousama@gmail.com>"]
 edition = "2024"
 
 [lib]

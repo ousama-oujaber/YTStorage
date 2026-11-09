@@ -1,7 +1,8 @@
 {
   "name": "ytdisk-app",
+  "version": "1.0.0",
+  "description": "High-Density Optical Video Storage Engine inside 4K YouTube Videos",
   "private": true,
-  "version": "0.1.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
